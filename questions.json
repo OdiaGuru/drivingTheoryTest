@@ -1,0 +1,31 @@
+{
+    "categories": [
+        {
+            "id": "traffic-rules",
+            "name": "Traffic Rules",
+            "questions": [
+                {
+                    "id": 1,
+                    "text": "What is the maximum speed limit in a residential area unless otherwise posted?",
+                    "options": ["30 km/h", "50 km/h", "70 km/h", "90 km/h"],
+                    "correct": 1,
+                    "explanation": "The default speed limit in residential areas is 50 km/h unless otherwise posted."
+                }
+            ]
+        },
+        {
+            "id": "traffic-signs",
+            "name": "Traffic Signs",
+            "questions": [
+                {
+                    "id": 1,
+                    "text": "What does this warning sign indicate?",
+                    "image": "https://korkortonline.se/images/vagskylt-varning.jpg",
+                    "options": ["Road work ahead", "General warning", "Sharp turn", "School zone"],
+                    "correct": 1,
+                    "explanation": "This triangular sign with an exclamation mark is a general warning sign."
+                }
+            ]
+        }
+    ]
+}

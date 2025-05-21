@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swedish Driving License Quiz</title>
+    <style>
+        :root[data-theme="light"] {
+            --bg-color: #f9f9f9;
+            --text-color: #333;
+            --container-bg: #ffffff;
+            --border-color: #ccc;
+        }
+        
+        :root[data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #ffffff;
+            --container-bg: #2d2d2d;
+            --border-color: #444;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .quiz-container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background-color: var(--container-bg);
+        }
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            padding: 10px;
+            border-radius: 50%;
+            background-color: var(--container-bg);
+            color: var(--text-color);
+        }
+        .control-menu {
+            position: fixed;
+            top: 20px;
+            right: 70px;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            padding: 10px;
+            border-radius: 50%;
+            background-color: var(--container-bg);
+            color: var(--text-color);
+        }
+
+        .menu-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 200px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .menu-content.show {
+            display: block;
+        }
+
+        .setting-group {
+            margin-bottom: 15px;
+        }
+
+        .setting-group h4 {
+            margin: 0 0 8px 0;
+            color: var(--text-color);
+        }
+
+        .question-numbers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .question-number-btn {
+            padding: 5px 10px;
+            border: 1px solid var(--border-color);
+            background: var(--container-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .question-number-btn.active {
+            background: #007BFF;
+            color: white;
+        }
+
+        .question {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .options {
+            list-style-type: none;
+            padding: 0;
+        }
+        .options li {
+            margin-bottom: 10px;
+        }
+        .timer {
+            font-size: 16px;
+            color: red;
+            margin-bottom: 20px;
+        }
+        .submit-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+        .question-image {
+            max-width: 100%;
+            margin-bottom: 20px;
+        }
+        .question-counter {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .nav-btn:hover {
+            background-color: #545b62;
+        }
+        .category-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-align: left;
+        }
+        
+        .category-btn:hover {
+            background-color: #007BFF;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()" id="theme-toggle">☀️</button>
+    <div class="control-menu">
+        <button class="control-btn" onclick="toggleMenu()">⚙️</button>
+        <div class="menu-content" id="menuContent">
+            <div class="setting-group">
+                <h4>Number of Questions</h4>
+                <div class="question-numbers" id="questionNumbers">
+                    <button class="question-number-btn" data-value="5">5</button>
+                    <button class="question-number-btn" data-value="10">10</button>
+                    <button class="question-number-btn" data-value="20">20</button>
+                    <button class="question-number-btn" data-value="30">30</button>
+                    <button class="question-number-btn" data-value="40">40</button>
+                    <button class="question-number-btn active" data-value="65">65</button>
+                </div>
+            </div>
+            <div class="setting-group">
+                <h4>Show Correct Answer</h4>
+                <select id="showAnswerSetting" onchange="saveSettings()">
+                    <option value="after">After the test</option>
+                    <option value="immediate">Immediately</option>
+                </select>
+            </div>
+            <button class="submit-btn" onclick="saveSettings()">Save Settings</button>
+        </div>
+    </div>
+    <div id="category-selection" class="quiz-container" style="display: none;">
+        <h2>Select Question Category</h2>
+        <div id="category-list"></div>
+    </div>
+    <div class="quiz-container">
+        <div class="timer" id="timer">Time Remaining: 60:00</div>
+        <div class="question-counter">Question <span id="current-question">1</span> of 70</div>
+        <div id="question-container">
+            <img id="question-image" class="question-image" src="" style="display: none;">
+            <div class="question" id="question-text"></div>
+            <ul class="options" id="options-list"></ul>
+        </div>
+        <div class="navigation-buttons">
+            <button class="nav-btn" onclick="previousQuestion()" id="prev-btn">Previous</button>
+            <button class="submit-btn" onclick="submitAnswer()">Submit Answer</button>
+            <button class="nav-btn" onclick="nextQuestion()" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let questionSets = [];
+        let currentCategory = null;
+
+        async function loadQuestionSets() {
+            try {
+                const response = await fetch('questions.json');
+                const data = await response.json();
+                questionSets = data.categories;
+                showCategorySelection();
+            } catch (error) {
+                console.error('Error loading questions:', error);
+            }
+        }
+
+        function showCategorySelection() {
+            document.getElementById('category-selection').style.display = 'block';
+            document.querySelector('.quiz-container').style.display = 'none';
+            
+            const categoryList = document.getElementById('category-list');
+            categoryList.innerHTML = questionSets.map(category => `
+                <button class="category-btn" onclick="startCategory('${category.id}')">
+                    ${category.name}
+                </button>
+            `).join('');
+        }
+
+        function startCategory(categoryId) {
+            currentCategory = questionSets.find(c => c.id === categoryId);
+            questions = currentCategory.questions;
+            userAnswers = new Array(questions.length).fill(null);
+            document.getElementById('category-selection').style.display = 'none';
+            document.querySelector('.quiz-container').style.display = 'block';
+            currentQuestionIndex = 0;
+            loadQuestion(0);
+            startTimer();
+        }
+
+        const questions = [
+            {
+                text: "What is the maximum speed limit in a residential area unless otherwise posted?",
+                options: ["30 km/h", "50 km/h", "70 km/h", "90 km/h"],
+                correct: 1
+            },
+            {
+                text: "When should you use your hazard lights?",
+                options: ["When your vehicle is a temporary traffic hazard", "When parking", "When driving slowly", "When changing lanes"],
+                correct: 0,
+                image: "https://korkortonline.se/images/vagskylt-varning.jpg"
+            }
+            // Add more questions here
+        ];
+
+        let currentQuestionIndex = 0;
+        let userAnswers = new Array(70).fill(null);
+        let timeRemaining = 60 * 60;
+        let quizSettings = {
+            numberOfQuestions: 65,
+            showAnswerTiming: 'after'
+        };
+
+        function loadQuestion(index) {
+            const question = questions[index];
+            document.getElementById('question-text').textContent = question.text;
+            document.getElementById('current-question').textContent = index + 1;
+            
+            const optionsList = document.getElementById('options-list');
+            optionsList.innerHTML = '';
+            
+            const questionImage = document.getElementById('question-image');
+            if (question.image) {
+                questionImage.src = question.image;
+                questionImage.style.display = 'block';
+            } else {
+                questionImage.style.display = 'none';
+            }
+
+            question.options.forEach((option, i) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <input type="radio" name="answer" id="option${i}" value="${i}" 
+                        ${userAnswers[index] === i ? 'checked' : ''}>
+                    <label for="option${i}">${option}</label>
+                `;
+                optionsList.appendChild(li);
+            });
+
+            document.getElementById('prev-btn').disabled = index === 0;
+            document.getElementById('next-btn').disabled = index === questions.length - 1;
+        }
+
+        function previousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion(currentQuestionIndex);
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion(currentQuestionIndex);
+            }
+        }
+
+        function submitAnswer() {
+            const selectedOption = document.querySelector('input[name="answer"]:checked');
+            if (selectedOption) {
+                userAnswers[currentQuestionIndex] = parseInt(selectedOption.value);
+                if (quizSettings.showAnswerTiming === 'immediate') {
+                    const isCorrect = userAnswers[currentQuestionIndex] === questions[currentQuestionIndex].correct;
+                    alert(isCorrect ? 'Correct!' : 'Incorrect. The correct answer was: ' + 
+                          questions[currentQuestionIndex].options[questions[currentQuestionIndex].correct]);
+                }
+                nextQuestion();
+            } else {
+                alert('Please select an answer before proceeding.');
+            }
+        }
+
+        function startTimer() {
+            const timerElement = document.getElementById('timer');
+            const interval = setInterval(() => {
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                timerElement.textContent = `Time Remaining: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+                if (timeRemaining <= 0) {
+                    clearInterval(interval);
+                    alert('Time is up!');
+                }
+
+                timeRemaining--;
+            }, 1000);
+        }
+
+        function toggleTheme() {
+            const root = document.documentElement;
+            const themeToggle = document.getElementById('theme-toggle');
+            const currentTheme = root.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            root.setAttribute('data-theme', newTheme);
+            themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+            localStorage.setItem('theme', newTheme);
+        }
+
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('quizSettings');
+            if (savedSettings) {
+                quizSettings = JSON.parse(savedSettings);
+                // Apply settings to UI
+                document.querySelectorAll('.question-number-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.value == quizSettings.numberOfQuestions);
+                });
+                document.getElementById('showAnswerSetting').value = quizSettings.showAnswerTiming;
+            }
+            userAnswers = new Array(quizSettings.numberOfQuestions).fill(null);
+        }
+
+        function toggleMenu() {
+            document.getElementById('menuContent').classList.toggle('show');
+        }
+
+        function saveSettings() {
+            const activeNumber = document.querySelector('.question-number-btn.active');
+            quizSettings.numberOfQuestions = parseInt(activeNumber.dataset.value);
+            quizSettings.showAnswerTiming = document.getElementById('showAnswerSetting').value;
+            
+            localStorage.setItem('quizSettings', JSON.stringify(quizSettings));
+            userAnswers = new Array(quizSettings.numberOfQuestions).fill(null);
+            toggleMenu();
+            loadQuestion(0); // Reload current question with new settings
+        }
+
+        // Add click handlers for question number buttons
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.question-number-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.question-number-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                });
+            });
+        });
+
+        window.onload = () => {
+            loadQuestionSets();
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('theme-toggle').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+            loadSettings();
+        };
+    </script>
+</body>
+</html>
