@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Quiz Application</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* Basic styling */
+        :root {
+            --background-color: #f5f5f5;
+            --text-color: #333;
+            --container-bg: #fff;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --option-bg: #f9f9f9;
+            --option-border: #ddd;
+            --option-hover: #e9e9e9;
+            --progress-bg: #e9ecef;
+            --timer-color: #333;
+        }
+        
+        body.dark-theme {
+            --background-color: #222;
+            --text-color: #f5f5f5;
+            --container-bg: #333;
+            --shadow-color: rgba(255, 255, 255, 0.1);
+            --option-bg: #444;
+            --option-border: #555;
+            --option-hover: #555;
+            --progress-bg: #444;
+            --timer-color: #f5f5f5;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: transparent;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:hover {
+            background-color: var(--option-hover);
+        }
+        
+        .quiz-container {
+            background-color: var(--container-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px var(--shadow-color);
+        }
+        
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .timer-container {
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: var(--timer-color);
+        }
+        
+        .question-container {
+            margin-bottom: 20px;
+        }
+        
+        .question-image {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        
+        .options-container {
+            margin-top: 15px;
+        }
+        
+        .option-item {
+            background-color: var(--option-bg);
+            border: 1px solid var(--option-border);
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .option-item:hover {
+            background-color: var(--option-hover);
+        }
+        
+        .option-item.selected {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        
+        .option-item.correct {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        .option-item.incorrect {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #0069d9;
+        }
+        
+        .btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .results-container {
+            text-align: center;
+            display: none;
+        }
+        
+        .results-score {
+            font-size: 2em;
+            margin-bottom: 15px;
+            color: #007bff;
+        }
+        
+        .result-message {
+            margin-bottom: 20px;
+        }
+        
+        /* Progress bar */
+        .progress-container {
+            width: 100%;
+            background-color: var(--progress-bg);
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #007bff;
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="theme-toggle">
+        <i class="fas fa-sun"></i>
+    </button>
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>Interactive Quiz</h1>
+            <div class="timer-container">
+                Time Left: <span id="timer">00:00</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progress"></div>
+            </div>
+        </div>
+        
+        <div id="quiz-content">
+            <div class="question-container">
+                <h2 id="question-text">Question text will appear here</h2>
+                <div id="image-container"></div>
+                <div class="options-container" id="options-list">
+                    <!-- Options will be inserted here -->
+                </div>
+            </div>
+            
+            <div class="button-container">
+                <button id="next-btn" class="btn" disabled>Next Question</button>
+                <button id="submit-btn" class="btn" style="display: none;">Submit Quiz</button>
+            </div>
+        </div>
+        
+        <div class="results-container" id="results">
+            <h2>Quiz Results</h2>
+            <div class="results-score">
+                You scored: <span id="score">0</span>/<span id="total-questions">0</span>
+            </div>
+            <div class="result-message" id="result-message"></div>
+            <div class="button-container">
+                <button id="retry-btn" class="btn">Take Quiz Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quiz state variables
+        let quizData = [];
+        let currentQuestion = 0;
+        let score = 0;
+        let timeLeft = 0;
+        let timer;
+        let selectedOption = null;
+        let quizCompleted = false;
+
+        // DOM Elements
+        const questionText = document.getElementById('question-text');
+        const imageContainer = document.getElementById('image-container');
+        const optionsList = document.getElementById('options-list');
+        const nextButton = document.getElementById('next-btn');
+        const submitButton = document.getElementById('submit-btn');
+        const timerElement = document.getElementById('timer');
+        const quizContent = document.getElementById('quiz-content');
+        const resultsElement = document.getElementById('results');
+        const scoreElement = document.getElementById('score');
+        const totalQuestionsElement = document.getElementById('total-questions');
+        const resultMessage = document.getElementById('result-message');
+        const retryButton = document.getElementById('retry-btn');
+        const progressBar = document.getElementById('progress');
+        const themeToggle = document.getElementById('theme-toggle');
+
+        // Function to fetch quiz data from JSON file
+        function fetchQuizData() {
+            console.log('Attempting to load quiz data with hardcoded values');
+            
+            // Hardcode the quiz data directly into the JavaScript
+            quizData = [
+    {
+        "question": "What is the basic speed limit in a built-up area in Sweden?",
+        "options": ["30 km/h", "50 km/h", "70 km/h", "80 km/h"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is the basic speed limit outside of a built-up area in Sweden?",
+        "options": ["50 km/h", "70 km/h", "90 km/h", "110 km/h"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "In what order should you follow different traffic instructions?",
+        "options": ["Road signs, Traffic signals, Police signals", "Police signals, Traffic signals, Road signs", "Traffic signals, Road signs, Police signals", "Road signs, Police signals, Traffic signals"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is the hard shoulder primarily used for?",
+        "options": ["Parking", "Pedestrians, cyclists, and slow-moving vehicles", "Overtaking", "Emergency stops only"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What should you do when approaching a pedestrian crossing?",
+        "image": "https://korkortonline.se/images/theory/pedestrian-crossing-200.jpg",
+        "options": ["Speed up to pass quickly", "Maintain speed if no one is crossing", "Slow down and be prepared to stop", "Stop even if no one is crossing"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "Which groups should you be especially considerate of in traffic?",
+        "options": ["Only other drivers", "Cyclists and motorcyclists", "Children, elderly, and people with disabilities", "Police and traffic wardens only"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What is a key principle of defensive driving?",
+        "options": ["Always having the right of way", "Taking risks to save time", "Maintaining wide safety margins", "Driving at maximum speed limit"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What should you do when driving in icy conditions?",
+        "image": "https://korkortonline.se/images/theory/icy-road-200.jpg",
+        "options": ["Maintain the posted speed limit", "Drive faster to minimize time on ice", "Adapt your speed to the conditions", "Keep the same distance as in normal conditions"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "How far before a pedestrian crossing are you not permitted to stop or park?",
+        "options": ["5 meters", "10 meters", "15 meters", "20 meters"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What does 'giving way' to pedestrians at a crossing mean?",
+        "options": ["Only stopping if they are already on the crossing", "Stopping when they're about to step onto the crossing", "Honking to warn them", "Accelerating to pass before they cross"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is important to do when passing a cyclist?",
+        "options": ["Honk to warn them", "Speed up to pass quickly", "Maintain a wide margin of safety", "Drive as close as possible to show confidence"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "When may you briefly drive on the hard shoulder?",
+        "options": ["When you want to park", "To facilitate overtaking", "When there is a traffic jam", "You may never drive on the hard shoulder"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is the carriageway?",
+        "options": ["Only the right lane", "The entire road including hard shoulders", "Both lanes combined", "Only the area marked with white lines"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "Which vehicles have an obligation to give way to vehicles on the carriageway?",
+        "options": ["Vehicles on the hard shoulder", "Vehicles turning right", "Emergency vehicles", "All vehicles coming from the left"],
+        "correctAnswer": 0
+    },
+    {
+        "question": "What should you do to show your intentions clearly in traffic?",
+        "options": ["Always drive fast", "Never use turn signals", "Make eye contact with other road users", "Stay close to the vehicle in front"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What should you adapt your speed to?",
+        "options": ["Only the speed limit signs", "Vehicle condition, weather, and road conditions", "The speed of vehicles behind you", "The speed that feels comfortable"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is NOT allowed regarding speed in traffic?",
+        "options": ["Driving slowly when conditions require it", "Braking suddenly for no reason", "Adapting speed to the vehicle's condition", "Staying below the speed limit"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is a fundamental principle in Swedish traffic rules?",
+        "options": ["Always claim your right of way", "No one has any rights, only joint obligations", "Faster vehicles have priority", "Drivers always have priority over pedestrians"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is an example of considerate driving behavior?",
+        "options": ["Using high beams in city traffic", "Not causing unnecessary disturbance", "Honking to greet other drivers", "Parking wherever convenient"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is required when driving in a roundabout?",
+        "image": "https://korkortonline.se/images/theory/roundabout-200.jpg",
+        "options": ["Always stop before entering", "Yield to vehicles already in the roundabout", "Always take the first exit", "Drive as fast as possible"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What are examples of defensive driving?",
+        "options": ["Taking calculated risks", "Driving at the maximum speed limit", "Maintaining wide safety margins and driving smoothly", "Following the vehicle in front closely"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "How should you handle stress while driving?",
+        "options": ["Drive faster to reach your destination sooner", "Make sure you have plenty of time and stay calm", "Take shortcuts through residential areas", "Focus only on the car ahead of you"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is eco-driving?",
+        "options": ["Driving only electric vehicles", "Techniques to reduce fuel consumption and emissions", "Driving slowly on all roads", "Avoiding highways"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is most important when approaching a bend with limited visibility on an icy road?",
+        "options": ["Maintain the posted speed limit", "Accelerate through the bend", "Reduce speed significantly before entering the bend", "Brake hard while in the bend"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What does the principle of 'no one has any rights, only joint obligations' mean in Swedish traffic?",
+        "options": ["Emergency vehicles always have priority", "You should never insist on your right of way", "You don't need to follow the rules", "Police have all the rights"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "How many meters before and after a bus stop is parking prohibited?",
+        "options": ["5 meters", "10 meters", "15 meters", "20 meters"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "When must you use your turn signals?",
+        "options": ["Only when turning right", "Only when turning left", "When changing direction or lane", "Only in heavy traffic"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What is the primary purpose of making eye contact with pedestrians at crossings?",
+        "options": ["To intimidate them", "To confirm they have seen you", "To make friends", "To avoid legal responsibility"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "When should child safety seats face backward?",
+        "options": ["Only until age 1", "Preferably until age 4-5", "Only on highways", "When the child is sleeping"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is the recommended minimum following distance in good conditions?",
+        "options": ["1 second", "2 seconds", "3 seconds", "5 seconds"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What happens to stopping distance on wet roads compared to dry roads?",
+        "options": ["It decreases slightly", "It stays the same", "It approximately doubles", "It becomes ten times longer"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What is the main purpose of the 'three-second rule'?",
+        "options": ["To time traffic lights", "To ensure adequate following distance", "To check if you're tired", "To measure reaction time when drinking alcohol"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What should you do if you experience aquaplaning?",
+        "options": ["Brake hard immediately", "Accelerate to push through the water", "Release the accelerator and hold the steering wheel straight", "Turn sharply to regain control"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What is the meaning of a continuous yellow line along the edge of the road?",
+        "options": ["Stopping prohibited", "Parking prohibited", "Overtaking prohibited", "Pedestrian zone"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "When driving on a motorway, which lane should you normally use?",
+        "options": ["The leftmost lane", "The rightmost lane", "Any lane you prefer", "The middle lane on a three-lane motorway"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is the maximum allowed blood alcohol concentration for non-professional drivers in Sweden?",
+        "options": ["0.02%", "0.05%", "0.08%", "0.10%"],
+        "correctAnswer": 0
+    },
+    {
+        "question": "What should you do when approaching a railway crossing with flashing red lights?",
+        "options": ["Speed up to cross quickly", "Stop at least 5 meters before the crossing", "Proceed if you don't see a train", "Honk your horn and continue"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is the minimum tread depth required for tires during winter conditions in Sweden?",
+        "options": ["1.6 mm", "3 mm", "4 mm", "5 mm"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "When are winter tires mandatory in Sweden?",
+        "options": ["October 1 to April 15", "November 1 to March 31", "December 1 to March 31 (if winter conditions)", "January 1 to February 28"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What should you do if you need to stop on a motorway due to an emergency?",
+        "options": ["Stop in your lane with hazard lights on", "Pull over onto the hard shoulder as far right as possible", "Exit at the next junction no matter what", "Stop in the leftmost lane"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is ABS (Anti-lock Braking System) designed to do?",
+        "options": ["Prevent the engine from stalling", "Prevent the wheels from locking during braking", "Prevent speeding", "Prevent steering failure"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is the correct technique for checking blind spots?",
+        "options": ["Looking in the rearview mirror only", "Relying solely on side mirrors", "Turning your head to look over your shoulder", "Using your horn to alert others"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What does ESC (Electronic Stability Control) help prevent?",
+        "options": ["Engine overheating", "Excessive fuel consumption", "Skidding and loss of control", "Tire wear"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What should you check regularly to ensure your vehicle's roadworthiness?",
+        "options": ["Only the engine oil level", "Only tire pressure", "Only brake fluid", "Lights, tires, fluids, and brakes"],
+        "correctAnswer": 3
+    },
+    {
+        "question": "What is the primary purpose of a roadworthiness test (vehicle inspection)?",
+        "options": ["To increase government revenue", "To ensure the vehicle meets safety and environmental standards", "To check the vehicle's market value", "To verify the owner's identity"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What should you do when approaching an emergency vehicle with blue lights and sirens?",
+        "options": ["Speed up to get out of the way", "Pull over safely and allow it to pass", "Ignore it if it's on the opposite side", "Follow it to help"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What should you do to avoid fatigue on long drives?",
+        "options": ["Drink coffee continuously", "Take regular breaks every 1.5-2 hours", "Keep the music very loud", "Drive faster to reach your destination sooner"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is the priority order at an intersection with no signs or signals?",
+        "options": ["Vehicles coming from the right have priority", "Largest vehicle goes first", "Vehicle traveling fastest has priority", "Vehicle that arrives first goes first"],
+        "correctAnswer": 0
+    },
+    {
+        "question": "What is the safe and legal distance to park from a fire hydrant?",
+        "options": ["At least 3 meters", "At least 5 meters", "At least 10 meters", "There is no restriction"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What does a triangular yield sign mean?",
+        "options": ["Stop completely", "Reduce speed", "Give way to traffic on the intersecting road", "One-way street ahead"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "When must you yield to pedestrians at a zebra crossing?",
+        "options": ["Only if they wave at you", "Only during daytime", "When they are on or about to step onto the crossing", "Only if there is a traffic light"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What is the correct action when entering a roundabout?",
+        "options": ["Always stop before entering", "Yield to vehicles already in the roundabout", "Accelerate quickly to merge", "Sound your horn to alert other drivers"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "When turning right at an intersection with a bicycle lane, what should you do?",
+        "options": ["Yield to cyclists going straight", "Accelerate to get ahead of cyclists", "Honk to warn cyclists", "Ignore cyclists as they must yield to you"],
+        "correctAnswer": 0
+    },
+    {
+        "question": "What does a solid white line between lanes indicate?",
+        "options": ["Overtaking is permitted", "Changing lanes is permitted", "Changing lanes is prohibited", "Parking is permitted"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What is the purpose of a rumble strip on the side of a highway?",
+        "options": ["To improve drainage", "To alert drivers they are leaving their lane", "To mark bicycle lanes", "To reduce speed"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What does it mean when a traffic light shows a steady yellow light?",
+        "options": ["Accelerate to pass through quickly", "Stop if you can do so safely", "Prepare to go", "Pedestrians may cross"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "In a traffic circle (roundabout), who has the right of way?",
+        "options": ["Vehicles entering the roundabout", "Vehicles already in the roundabout", "Vehicles on the right", "The largest vehicle"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is the purpose of an acceleration lane when merging onto a highway?",
+        "options": ["To park temporarily", "To match your speed with highway traffic", "To pass slow vehicles", "To take a break from driving"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What should you do if your vehicle skids on a slippery road?",
+        "options": ["Slam on the brakes", "Turn the steering wheel sharply", "Look and steer in the direction you want to go", "Accelerate hard"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What is hydroplaning?",
+        "options": ["Driving through deep water", "When tires lose contact with the road due to water", "Braking on wet roads", "Using windshield wipers in heavy rain"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "When is it legal to use high beam headlights?",
+        "options": ["When driving in a city", "When approaching another vehicle", "When driving on an unlit road with no oncoming traffic", "At all times for better visibility"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What does a flashing yellow traffic light mean?",
+        "options": ["Stop and wait", "Proceed with caution", "Prepare to stop", "Pedestrians have priority"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What should you do when an emergency vehicle with sirens approaches?",
+        "options": ["Speed up to clear the way", "Continue driving normally", "Pull over safely and let it pass", "Follow behind it closely"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What does a white zigzag line along the curb indicate?",
+        "options": ["Parking is permitted", "No stopping at any time", "Loading zone", "Bus lane"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "How should you adjust your driving in fog?",
+        "options": ["Use high beam headlights", "Increase speed to exit the fog zone quickly", "Reduce speed and increase following distance", "Follow the car in front closely"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What is the recommended minimum tire tread depth for summer tires in Sweden?",
+        "options": ["1 mm", "1.6 mm", "3 mm", "4 mm"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What does a blue circular sign with a white arrow indicate?",
+        "options": ["No entry", "One-way street", "Mandatory direction", "Highway ahead"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What should you do before changing lanes on a highway?",
+        "options": ["Signal, check mirrors, and blind spots", "Accelerate quickly", "Change lanes immediately when needed", "Brake to check if someone is behind you"],
+        "correctAnswer": 0
+    },
+    {
+        "question": "What is the meaning of intermittent (broken) yellow lines along the road edge?",
+        "options": ["No parking during specified times", "No stopping at any time", "Loading/unloading only", "Bus lane"],
+        "correctAnswer": 0
+    },
+    {
+        "question": "What important check should you make when turning left at an intersection?",
+        "options": ["Only check for vehicles from the right", "Only check for vehicles from the left", "Check for oncoming vehicles and yield to them", "Honk before turning"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What is the purpose of crumple zones in a vehicle?",
+        "options": ["To improve aerodynamics", "To absorb impact energy in a crash", "To increase fuel efficiency", "To reduce vehicle weight"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What should you do if you encounter a school bus with flashing warning lights?",
+        "options": ["Maintain speed but be alert", "Speed up to pass quickly", "Slow down and be prepared to stop", "Ignore if you're on the opposite side"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What does a sign with a red border and white center prohibit?",
+        "options": ["Warning of danger ahead", "Special regulations or restrictions", "Mandatory actions", "Information only"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is the purpose of a vehicle's safety belt pretensioner?",
+        "options": ["To make the belt more comfortable", "To tighten the belt during a crash", "To allow easier movement", "To prevent the belt from getting dirty"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "When driving on a motorway, when should you use the leftmost lane?",
+        "options": ["Whenever you want to drive fast", "For normal driving", "Only when overtaking", "When approaching an exit"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What should you do at a pedestrian crossing if an elderly person is walking slowly across?",
+        "options": ["Honk to make them hurry", "Go around them", "Wait patiently until they have crossed", "Flash your lights to hurry them up"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What is the correct technique for scanning the road ahead while driving?",
+        "options": ["Focus only on the vehicle directly in front", "Look only at the road surface", "Scan near and far, and check mirrors regularly", "Focus mainly on the dashboard"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What should you do if you need to use your mobile phone while driving?",
+        "options": ["Hold it against your ear briefly", "Type messages at red lights only", "Pull over safely and stop before using it", "Use it only when driving slowly"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What does a road sign with a red circle and a motorcycle symbol inside it mean?",
+        "options": ["Motorcycle parking only", "No motorcycles allowed", "Motorcycle repair shop nearby", "Motorcycles must yield"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is the correct timing to switch from low beam to high beam lights?",
+        "options": ["Only in complete darkness", "When there are no oncoming vehicles and no vehicles ahead", "Always at night regardless of other traffic", "Only on highways"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is the proper adjustment for a head restraint?",
+        "options": ["As low as possible", "At shoulder level", "At the top of the head", "At the base of the skull/top of neck"],
+        "correctAnswer": 3
+    },
+    {
+        "question": "What is the main purpose of an airbag in a car?",
+        "options": ["To replace seat belts", "To work with seat belts to reduce impact forces", "To cushion only the driver", "To prevent rollovers"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What should you do if your vehicle breaks down on a motorway?",
+        "options": ["Stay in the vehicle with hazard lights on", "Try to repair it on the roadside", "Move to a safe place away from traffic", "Walk along the motorway to find help"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What does the principle of 'eco-driving' primarily aim to reduce?",
+        "options": ["Vehicle noise", "Fuel consumption and emissions", "Driver fatigue", "Vehicle maintenance costs"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "How does alcohol consumption affect your driving abilities?",
+        "options": ["It improves concentration", "It slows reaction time and impairs judgment", "It has no effect if you're experienced", "It only affects new drivers"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What should you check about your tires before a long journey?",
+        "options": ["Only the tread depth", "Only the tire pressure", "Both tread depth and tire pressure", "The manufacturing date only"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What is the purpose of a catalytic converter in a vehicle?",
+        "options": ["To increase engine power", "To reduce harmful emissions", "To improve fuel economy", "To reduce engine noise"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is the correct position of hands on the steering wheel?",
+        "image": "https://korkortonline.se/images/theory/steering-wheel-200.jpg",
+        "options": ["At the bottom of the wheel", "One hand at 12 o'clock", "At the 9 and 3 or 10 and 2 positions", "One hand at 9, one at 6"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What is the correct procedure when joining a motorway?",
+        "options": ["Stop at the end of the slip road and wait for a gap", "Use the acceleration lane to match speed with traffic", "Enter slowly to be safe", "Always have right of way over motorway traffic"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What does a sign with a red triangle and an exclamation mark indicate?",
+        "options": ["General warning of danger", "No entry", "Stop ahead", "Speed limit ahead"],
+        "correctAnswer": 0
+    },
+    {
+        "question": "What is the correct sequence of actions before making a turn?",
+        "options": ["Signal, mirror, maneuver", "Mirror, signal, maneuver", "Maneuver, signal, mirror", "Signal, maneuver, mirror"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "When should you use your horn in traffic?",
+        "options": ["To greet friends", "To express frustration", "Only to warn of danger", "When stuck in traffic"],
+        "correctAnswer": 2
+    },
+    {
+        "question": "What is the meaning of a diamond-shaped sign?",
+        "options": ["Warning", "Yield", "Priority road", "No vehicles"],
+        "correctAnswer": 0
+    },
+    {
+        "question": "What does a sign with a red circle and a number inside it indicate?",
+        "options": ["Minimum speed limit", "Maximum speed limit", "Distance to destination", "Weight limit"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What should you do when driving in heavy rain?",
+        "options": ["Drive faster to get through the rain quickly", "Reduce speed and increase following distance", "Apply brakes frequently to test traction", "Follow other vehicles closely"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "How do you correctly check your blind spot?",
+        "options": ["Look in the rearview mirror", "Turn your head and look over your shoulder", "Ask a passenger to check", "Check only the side mirrors"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is the main purpose of ABS (Anti-lock Braking System)?",
+        "options": ["To reduce braking distance on all surfaces", "To allow steering while braking hard", "To prevent the car from starting", "To make the brakes last longer"],
+        "correctAnswer": 1
+    },
+    {
+        "question": "What is the primary function of a traction control system?",
+        "options": ["To reduce fuel consumption", "To prevent wheel spin during acceleration", "To control the temperature of tires", "To monitor tire pressure"],
+        "correctAnswer": 1
+    }
+];
+            
+            console.log('Quiz data loaded successfully', quizData.length, 'questions');
+            initQuiz();
+        }
+        
+        // Helper function to use default quiz data - No longer needed with hardcoded approach
+        function useDefaultQuizData(errorMsg) {
+            // This function is kept for compatibility but no longer used
+            console.warn('This function is deprecated');
+            initQuiz();
+        }
+
+        // Initialize quiz
+        function initQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            quizCompleted = false;
+            
+            // Set total questions in the results section
+            totalQuestionsElement.textContent = quizData.length;
+            
+            // Hide results and show quiz content
+            quizContent.style.display = 'block';
+            resultsElement.style.display = 'none';
+            
+            // Load first question
+            loadQuestion();
+            
+            // Start the timer for the whole quiz (5 minutes)
+            startTimer(60 * 60); // 5 minutes in seconds
+            
+            // Update progress bar
+            updateProgress();
+        }
+
+        // Load question function
+        function loadQuestion() {
+            // Reset selection
+            selectedOption = null;
+            nextButton.disabled = true;
+            
+            // Get current question data
+            const currentQuizData = quizData[currentQuestion];
+            
+            // Set question text
+            questionText.textContent = `${currentQuestion + 1}. ${currentQuizData.question}`;
+            
+            // Clear previous image if any
+            imageContainer.innerHTML = '';
+            
+            // Add image if available
+            if (currentQuizData.image) {
+                const img = document.createElement('img');
+                img.src = currentQuizData.image;
+                img.alt = "Question Image";
+                img.className = "question-image";
+                imageContainer.appendChild(img);
+            }
+            
+            // Clear previous options
+            optionsList.innerHTML = '';
+            
+            // Add options
+            currentQuizData.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option-item';
+                optionElement.textContent = option;
+                optionElement.dataset.index = index;
+                
+                optionElement.addEventListener('click', selectOption);
+                
+                optionsList.appendChild(optionElement);
+            });
+            
+            // Show Next button for all questions except the last one
+            if (currentQuestion < quizData.length - 1) {
+                nextButton.style.display = 'inline-block';
+                submitButton.style.display = 'none';
+            } else {
+                nextButton.style.display = 'none';
+                submitButton.style.display = 'inline-block';
+            }
+            
+            // Update progress bar
+            updateProgress();
+        }
+
+        // Select option function
+        function selectOption(e) {
+            // If quiz is completed, don't allow selection
+            if (quizCompleted) return;
+            
+            // Remove selection from all options
+            const options = document.querySelectorAll('.option-item');
+            options.forEach(option => option.classList.remove('selected'));
+            
+            // Add selection to clicked option
+            e.target.classList.add('selected');
+            
+            // Store selected option index
+            selectedOption = parseInt(e.target.dataset.index);
+            
+            // Enable next button
+            nextButton.disabled = false;
+            submitButton.disabled = false;
+            
+            // Check answer
+            checkAnswer();
+        }
+
+        // Check answer function
+        function checkAnswer() {
+            const currentQuizData = quizData[currentQuestion];
+            const options = document.querySelectorAll('.option-item');
+            
+            // Add correct/incorrect classes
+            options.forEach((option, index) => {
+                // Remove previous result classes
+                option.classList.remove('correct', 'incorrect');
+                
+                // Add appropriate class
+                if (index === currentQuizData.correctAnswer) {
+                    option.classList.add('correct');
+                } else if (index === selectedOption && selectedOption !== currentQuizData.correctAnswer) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            // Update score if answer is correct
+            if (selectedOption === currentQuizData.correctAnswer) {
+                score++;
+            }
+        }
+
+        // Next question function
+        function nextQuestion() {
+            currentQuestion++;
+            
+            if (currentQuestion < quizData.length) {
+                loadQuestion();
+            } else {
+                endQuiz();
+            }
+        }
+
+        // End quiz function
+        function endQuiz() {
+            // Stop timer
+            clearInterval(timer);
+            
+            // Mark quiz as completed
+            quizCompleted = true;
+            
+            // Hide quiz content and show results
+            quizContent.style.display = 'none';
+            resultsElement.style.display = 'block';
+            
+            // Update score
+            scoreElement.textContent = score;
+            
+            // Update result message based on score
+            const percentage = (score / quizData.length) * 100;
+            
+            if (percentage >= 80) {
+                resultMessage.textContent = "Excellent! You did great!";
+            } else if (percentage >= 60) {
+                resultMessage.textContent = "Good job! You passed the quiz.";
+            } else {
+                resultMessage.textContent = "You need to study more. Try again!";
+            }
+        }
+
+        // Timer function
+        function startTimer(seconds) {
+            // Clear any existing timer
+            clearInterval(timer);
+            
+            // Set initial time left
+            timeLeft = seconds;
+            
+            // Update timer display
+            updateTimerDisplay();
+            
+            // Start interval
+            timer = setInterval(() => {
+                timeLeft--;
+                
+                // Update timer display
+                updateTimerDisplay();
+                
+                // End quiz if time is up
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    endQuiz();
+                }
+            }, 1000);
+        }
+
+        // Update timer display
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            
+            timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Change color when time is running out
+            if (timeLeft < 30) {
+                timerElement.style.color = 'red';
+            } else {
+                timerElement.style.color = 'var(--timer-color)';
+            }
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            // Change from currentQuestion to (currentQuestion + 1) to reflect completed questions
+            const progressPercentage = ((currentQuestion + 1) / quizData.length) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+        }
+
+        // Theme toggle function
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            const icon = themeToggle.querySelector('i');
+            if (document.body.classList.contains('dark-theme')) {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            } else {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            }
+        }
+
+        // Event listeners
+        nextButton.addEventListener('click', nextQuestion);
+        submitButton.addEventListener('click', endQuiz);
+        retryButton.addEventListener('click', initQuiz);
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // Fetch quiz data and initialize quiz when page loads
+        document.addEventListener('DOMContentLoaded', fetchQuizData);
+    </script>
+</body>
+</html>
